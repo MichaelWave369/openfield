@@ -11,12 +11,35 @@ permissions:
 jobs:
   validate:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 20
+    env:
+      DATABASE_URL: postgres://openfield:openfield@localhost:5432/openfield
+    services:
+      postgres:
+        image: postgis/postgis:16-3.4
+        env:
+          POSTGRES_DB: openfield
+          POSTGRES_USER: openfield
+          POSTGRES_PASSWORD: openfield
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U openfield -d openfield"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 12
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: 22
+      - name: Install PostgreSQL client
+        run: sudo apt-get update && sudo apt-get install -y postgresql-client
+      - name: Validate evidence-spine migration
+        run: |
+          psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f infra/postgres/init/001_evidence_spine.sql
+          psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -c "select PostGIS_Version();"
+          psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -c "select count(*) from openfield.records;"
       - run: npm install --no-audit --no-fund
       - run: npm run typecheck
       - run: npm run lint
