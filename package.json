@@ -1,6 +1,6 @@
 {
   "name": "parallax-openfield",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "description": "Evidence-governed, map-first public intelligence workspace.",
   "license": "Apache-2.0",
@@ -11,10 +11,15 @@
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
-    "check": "npm run typecheck && npm run lint && npm run test && npm run build"
+    "check": "npm run typecheck && npm run lint && npm run test && npm run build",
+    "db:up": "docker compose up -d postgres",
+    "db:down": "docker compose down",
+    "db:logs": "docker compose logs -f postgres",
+    "keys:generate": "node scripts/generate-signing-key.mjs"
   },
   "dependencies": {
     "next": "^16.0.0",
+    "postgres": "^3.4.7",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"
   },
@@ -27,5 +32,7 @@
     "typescript": "^5.8.0",
     "vitest": "^3.0.0"
   },
-  "engines": { "node": ">=22" }
+  "engines": {
+    "node": ">=22"
+  }
 }
