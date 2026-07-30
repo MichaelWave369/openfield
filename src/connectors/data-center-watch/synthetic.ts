@@ -64,7 +64,13 @@ export class SyntheticDataCenterConnector implements OpenFieldConnector {
         },
         synthetic: true
       }],
-      health: syntheticDataCenterHealth
+      health: syntheticDataCenterHealth,
+      telemetry: {
+        requestCount: 0,
+        upstreamStatuses: [],
+        userAgent: null,
+        configurationHash: "sha256:64b9c15538b4f6c83057a59f6fb987a708f0644bf346241747a88fcda32f7736"
+      }
     };
   }
 }

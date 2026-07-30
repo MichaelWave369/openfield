@@ -65,7 +65,6 @@ export async function ingestConnectorBatch(
       storageUri: options.artifactStorageUri?.(artifactHash) ?? null,
       contentBase64: Buffer.from(artifact.bytes).toString("base64")
     };
-
     const payload: ReceiptPayload = {
       receiptVersion: "openfield.receipt.v1",
       receiptId: makeReceiptId(),
@@ -88,7 +87,6 @@ export async function ingestConnectorBatch(
         nodeId: options.nodeId
       }
     };
-
     artifacts.push(evidenceArtifact);
     receipts.push(signReceipt(createUnsignedReceipt(payload), options.signer.privateKey, options.signer.keyId));
   }
@@ -97,27 +95,30 @@ export async function ingestConnectorBatch(
   for (const artifact of artifacts) await options.store.appendArtifact(artifact);
   for (const receipt of receipts) await options.store.appendReceipt(receipt);
 
-  const records: EvidenceRecord[] = batch.records.map((record) => ({
-    recordId: record.recordId,
-    recordKey: record.recordKey,
-    missionId: record.missionId,
-    kind: record.kind,
-    title: record.title,
-    summary: record.summary,
-    location: record.location,
-    validFrom: record.validFrom,
-    validTo: record.validTo,
-    recordedAt: record.recordedAt,
-    supersedesRecordId: record.supersedesRecordId,
-    receiptIds: [receipts[record.artifactIndex].payload.receiptId],
-    dependencyRecordIds: record.dependencyRecordIds,
-    confidence: record.confidence,
-    synthetic: record.synthetic
-  }));
+  const records: EvidenceRecord[] = batch.records.map((record) => {
+    const receipt = receipts[record.artifactIndex];
+    if (!receipt) throw new Error(`Record ${record.recordId} has no receipt`);
+    return {
+      recordId: record.recordId,
+      recordKey: record.recordKey,
+      missionId: record.missionId,
+      kind: record.kind,
+      title: record.title,
+      summary: record.summary,
+      location: record.location,
+      validFrom: record.validFrom,
+      validTo: record.validTo,
+      recordedAt: record.recordedAt,
+      supersedesRecordId: record.supersedesRecordId,
+      receiptIds: [receipt.payload.receiptId],
+      dependencyRecordIds: record.dependencyRecordIds,
+      confidence: record.confidence,
+      synthetic: record.synthetic
+    };
+  });
 
   for (const record of records) await options.store.appendRecord(record);
   await options.store.appendSourceHealth(batch.health);
-
   return {
     batchId: batch.batchId,
     artifactHashes: artifacts.map((artifact) => artifact.artifactHash),

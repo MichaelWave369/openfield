@@ -3,6 +3,7 @@ import type {
   GeographicPoint,
   IsoTimestamp,
   RecordKind,
+  Sha256Digest,
   SourceHealthSample,
   SourceRegistration,
   TransformationStep
@@ -46,6 +47,13 @@ export type ConnectorRecord = {
   synthetic: boolean;
 };
 
+export type ConnectorTelemetry = {
+  requestCount: number;
+  upstreamStatuses: number[];
+  userAgent: string | null;
+  configurationHash: Sha256Digest;
+};
+
 export type ConnectorBatch = {
   batchId: string;
   collectedAt: IsoTimestamp;
@@ -53,6 +61,7 @@ export type ConnectorBatch = {
   artifacts: ConnectorArtifact[];
   records: ConnectorRecord[];
   health: SourceHealthSample;
+  telemetry?: ConnectorTelemetry;
 };
 
 export interface OpenFieldConnector {

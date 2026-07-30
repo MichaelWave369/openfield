@@ -7,11 +7,7 @@ import {
   verify,
   type KeyObject
 } from "node:crypto";
-import type {
-  ReceiptPayload,
-  Sha256Digest,
-  SignedReceipt
-} from "@/domain/evidence";
+import type { ReceiptPayload, Sha256Digest, SignedReceipt } from "@/domain/evidence";
 import { canonicalJson } from "@/lib/canonical-json";
 
 function asBytes(value: string | Uint8Array): Uint8Array {
@@ -22,12 +18,37 @@ export function sha256(value: string | Uint8Array): Sha256Digest {
   return `sha256:${createHash("sha256").update(asBytes(value)).digest("hex")}`;
 }
 
+export function importPrivateEd25519Key(value: KeyObject | string): KeyObject {
+  return typeof value === "string"
+    ? createPrivateKey({ key: Buffer.from(value, "base64"), format: "der", type: "pkcs8" })
+    : value;
+}
+
+export function importPublicEd25519Key(value: KeyObject | string): KeyObject {
+  return typeof value === "string"
+    ? createPublicKey({ key: Buffer.from(value, "base64"), format: "der", type: "spki" })
+    : value;
+}
+
+export function signDigest(value: string, privateKey: KeyObject | string): string {
+  return sign(null, Buffer.from(value), importPrivateEd25519Key(privateKey)).toString("base64");
+}
+
+export function verifyDigestSignature(
+  value: string,
+  signatureBase64: string,
+  publicKey: KeyObject | string
+): boolean {
+  return verify(
+    null,
+    Buffer.from(value),
+    importPublicEd25519Key(publicKey),
+    Buffer.from(signatureBase64, "base64")
+  );
+}
+
 export function createUnsignedReceipt(payload: ReceiptPayload): SignedReceipt {
-  return {
-    payload,
-    payloadHash: sha256(canonicalJson(payload)),
-    signature: null
-  };
+  return { payload, payloadHash: sha256(canonicalJson(payload)), signature: null };
 }
 
 export function signReceipt(
@@ -36,21 +57,13 @@ export function signReceipt(
   keyId: string
 ): SignedReceipt {
   const expectedHash = sha256(canonicalJson(receipt.payload));
-  if (expectedHash !== receipt.payloadHash) {
-    throw new Error("Receipt payload hash does not match payload");
-  }
-
-  const key = typeof privateKey === "string"
-    ? createPrivateKey({ key: Buffer.from(privateKey, "base64"), format: "der", type: "pkcs8" })
-    : privateKey;
-
-  const signature = sign(null, Buffer.from(receipt.payloadHash), key);
+  if (expectedHash !== receipt.payloadHash) throw new Error("Receipt payload hash does not match payload");
   return {
     ...receipt,
     signature: {
       algorithm: "Ed25519",
       keyId,
-      valueBase64: signature.toString("base64")
+      valueBase64: signDigest(receipt.payloadHash, privateKey)
     }
   };
 }
@@ -73,24 +86,11 @@ export function verifyReceipt(
   const left = Buffer.from(expectedHash);
   const right = Buffer.from(receipt.payloadHash);
   const payloadHashValid = left.length === right.length && timingSafeEqual(left, right);
-
-  const artifactHashValid = artifactBytes
-    ? sha256(artifactBytes) === receipt.payload.artifactHash
-    : null;
-
+  const artifactHashValid = artifactBytes ? sha256(artifactBytes) === receipt.payload.artifactHash : null;
   let signatureValid = false;
   if (receipt.signature && publicKey && payloadHashValid) {
-    const key = typeof publicKey === "string"
-      ? createPublicKey({ key: Buffer.from(publicKey, "base64"), format: "der", type: "spki" })
-      : publicKey;
-    signatureValid = verify(
-      null,
-      Buffer.from(receipt.payloadHash),
-      key,
-      Buffer.from(receipt.signature.valueBase64, "base64")
-    );
+    signatureValid = verifyDigestSignature(receipt.payloadHash, receipt.signature.valueBase64, publicKey);
   }
-
   const signaturePresent = receipt.signature !== null;
   const envelopeValid = payloadHashValid && signaturePresent && signatureValid;
   return {

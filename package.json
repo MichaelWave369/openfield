@@ -1,6 +1,6 @@
 {
   "name": "parallax-openfield",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "private": true,
   "description": "Evidence-governed, map-first public intelligence workspace.",
   "license": "Apache-2.0",
@@ -15,6 +15,7 @@
     "db:up": "docker compose up -d postgres",
     "db:down": "docker compose down",
     "db:logs": "docker compose logs -f postgres",
+    "db:migrate": "node scripts/migrate.mjs",
     "keys:generate": "node scripts/generate-signing-key.mjs"
   },
   "dependencies": {

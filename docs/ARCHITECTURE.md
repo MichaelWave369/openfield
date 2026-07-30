@@ -1,45 +1,63 @@
-# OpenField Architecture v0.2
+# OpenField Architecture v0.3
 
 ```text
 Public Source
     |
     v
-Governed Connector -----> Source Health Ledger
+Governed Connector -------> Source Health
+    |                            |
+    |                            v
+    +--------------------> Signed Execution Receipt
     |
     v
-Raw Artifact --SHA-256--> Signed Receipt Envelope
+Raw Artifact --SHA-256--> Signed Evidence Receipt
     |                           |
-    +-------- append-only ------+
-                |
-                v
-      Bitemporal Evidence Record
-                |
-                v
-   Map / Timeline / Graph / Replay
-                |
-                v
+    +---------- append-only ----+
+                 |
+                 v
+       Bitemporal Evidence Record
+                 |
+        +--------+---------+
+        |                  |
+        v                  v
+ Signing-Key History   Privacy Directives
+        |                  |
+        +--------+---------+
+                 v
+      Verification Package v2
+                 |
+                 v
+ Map / Timeline / Graph / Replay
+                 |
+                 v
  Double C Chambers -> Human Authority
 ```
 
-## Runtime layers
+## Trust is multidimensional
 
-1. **Connector boundary** — declares source owner, license, scope, refresh cadence, rate limit, failure behavior, and privacy class.
-2. **Artifact layer** — preserves original bytes or an immutable storage URI under a SHA-256 address.
-3. **Receipt layer** — canonical payload linking source, collection, validity, transformations, license, collector, and artifact hash. Receipts may be Ed25519 signed; production ingestion requires a signer.
-4. **Evidence layer** — append-only observation, claim, inference, forecast, contradiction, or unknown records.
-5. **Temporal layer** — `valid_from/valid_to` describe when something was true in the world; `recorded_at` describes when OpenField knew it.
-6. **Mission layer** — map, timeline, graph, replay, and verification-package views.
-7. **Authority layer** — GovernOtter, GovernOri, Protected Dissenter, and final human authorization.
+OpenField evaluates separate questions:
 
-## Storage modes
+1. Did the artifact bytes reproduce the recorded hash?
+2. Did canonical receipt bytes reproduce the payload hash?
+3. Did the signature verify cryptographically?
+4. Was that key registered and trusted for signatures at that time?
+5. Is the source authorized for the mission?
+6. Is export currently permitted by privacy directives?
+7. Did the connector run itself leave a signed execution receipt?
 
-- `postgres-postgis`: durable evidence spine selected when `DATABASE_URL` is configured.
-- `volatile-memory`: development/test mode. The health endpoint names this mode explicitly; it must not be presented as durable.
+No single green check silently answers all seven.
 
-## Append-only rule
+## Operational data families
 
-Artifacts, receipts, records, and health samples cannot be updated or deleted through normal database operations. Corrections create new records with `supersedes_record_id`; previous knowledge remains replayable.
+- source registrations and health samples;
+- artifacts and signed evidence receipts;
+- bitemporal evidence records;
+- signing-key lifecycle registrations;
+- privacy suppression/restoration directives;
+- signed connector-execution receipts.
 
-## Failure semantics
+All six are append-only. Corrections, revocations, and restorations add new records.
 
-A connector may emit no observations when its source is unavailable. It must still emit an explicit health sample. Stale material is not silently presented as current, and a failed connector may not reuse an earlier timestamp to appear healthy.
+## Connector failure semantics
+
+A failed upstream request creates no observations and replays no stale records. The attempt is represented by source health and a signed execution receipt. Ingestion rejection is distinct from an upstream failure so policy errors cannot masquerade as source outages.
