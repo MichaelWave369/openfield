@@ -11,7 +11,7 @@ permissions:
 jobs:
   validate:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 25
     env:
       DATABASE_URL: postgres://openfield:openfield@localhost:5432/openfield
     services:
@@ -35,11 +35,15 @@ jobs:
           node-version: 22
       - name: Install PostgreSQL client
         run: sudo apt-get update && sudo apt-get install -y postgresql-client
-      - name: Validate evidence-spine migration
+      - name: Validate database migrations
         run: |
           psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f infra/postgres/init/001_evidence_spine.sql
+          psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f infra/postgres/init/002_operational_trust.sql
           psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -c "select PostGIS_Version();"
           psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -c "select count(*) from openfield.records;"
+          psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -c "select count(*) from openfield.signing_key_registrations;"
+          psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -c "select count(*) from openfield.privacy_directives;"
+          psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -c "select count(*) from openfield.connector_executions;"
       - run: npm install --no-audit --no-fund
       - run: npm run typecheck
       - run: npm run lint

@@ -7,16 +7,26 @@ export function GET() {
     process.env.OPENFIELD_SIGNING_PRIVATE_KEY &&
     process.env.OPENFIELD_SIGNING_PUBLIC_KEY
   );
+  const secConfigured = Boolean(
+    process.env.OPENFIELD_SEC_CIK &&
+    process.env.OPENFIELD_SEC_USER_AGENT
+  );
 
   return NextResponse.json({
     ok: true,
     service: "parallax-openfield",
-    version: "0.2.0",
-    status: "evidence-spine",
+    version: "0.3.0",
+    status: "operational-trust",
     storage: databaseConfigured ? "postgres-postgis" : "volatile-memory",
     receiptSigning: signingConfigured ? "configured" : "not-configured",
+    signingKeyLifecycle: "supported",
+    privacyDirectives: "supported",
+    connectorExecutionReceipts: "supported",
+    lawfulConnectors: {
+      secEdgarSubmissions: secConfigured ? "configured-not-scheduled" : "available-not-configured"
+    },
     liveFeeds: 0,
-    truthBoundary: "synthetic fixtures only",
+    truthBoundary: "No connector runs automatically and no filing interpretation is performed.",
     timestamp: new Date().toISOString()
   });
 }

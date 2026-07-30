@@ -2,21 +2,24 @@
 
 ## M0 — Foundation — merged
 
-Operator console, synthetic mission, record classes, receipt inspection, confidence vector, API, tests, CI, governance, and security baseline.
+Operator console, synthetic mission, claim classes, receipt inspection, confidence vector, API, tests, CI, governance, and security baseline.
 
-## M1 — Durable evidence spine — v0.2 candidate
+## M1 — Durable evidence spine — merged
 
-PostgreSQL/PostGIS, append-only artifact storage, canonical signed envelopes, source registry, source-health telemetry, connector admission checks, and valid-time/recorded-time queries.
+PostgreSQL/PostGIS, append-only artifacts and receipts, source registry, source health, connector admission, bitemporal evidence, and verification packages.
 
-Remaining M1 release gates:
+## M1.5 — Operational trust — v0.3 candidate
 
-- exercise the PostgreSQL adapter with an insert/query round trip in CI;
-- add key rotation and revocation records around the included key-generation tool;
-- complete a privacy tombstone/redaction ADR without weakening custody history.
+- PostgreSQL adapter insert/query round trip in CI
+- signing-key registration, retirement, and revocation
+- privacy suppression/restoration directives
+- signed connector-execution receipts
+- Verification Package v2
+- first lawful public connector: SEC EDGAR filing metadata
 
 ## M2 — Data Center Watch pilot
 
-Lawfully available planning, permit, utility, interconnection, and corporate sources; entity resolution; site timelines; evidence packet export.
+Add operator-curated company watchlists, filing-document retrieval under source terms, permit and utility sources, entity resolution, site timelines, and evidence packet export. Filing interpretation must remain a separate claim-producing step with citations and dissent.
 
 ## M3 — Corroboration and replay
 

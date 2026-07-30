@@ -7,13 +7,23 @@ import type {
   SourceRegistration,
   TemporalQuery
 } from "@/domain/evidence";
+import type {
+  ConnectorExecutionQuery,
+  PrivacyDirective,
+  PrivacyTargetType,
+  SignedConnectorExecution,
+  SigningKeyRegistration
+} from "@/domain/trust";
 import type { EvidenceStore } from "@/lib/store/types";
+
+function iso(value: unknown): string {
+  return new Date(String(value)).toISOString();
+}
 
 function mapRecord(row: Record<string, unknown>): EvidenceRecord {
   const coordinates = row.longitude === null || row.latitude === null
     ? null
     : { type: "Point" as const, coordinates: [Number(row.longitude), Number(row.latitude)] as [number, number] };
-
   return {
     recordId: String(row.record_id),
     recordKey: String(row.record_key),
@@ -22,9 +32,9 @@ function mapRecord(row: Record<string, unknown>): EvidenceRecord {
     title: String(row.title),
     summary: String(row.summary),
     location: coordinates,
-    validFrom: new Date(String(row.valid_from)).toISOString(),
-    validTo: row.valid_to ? new Date(String(row.valid_to)).toISOString() : null,
-    recordedAt: new Date(String(row.recorded_at)).toISOString(),
+    validFrom: iso(row.valid_from),
+    validTo: row.valid_to ? iso(row.valid_to) : null,
+    recordedAt: iso(row.recorded_at),
     supersedesRecordId: row.supersedes_record_id ? String(row.supersedes_record_id) : null,
     receiptIds: (row.receipt_ids as string[]) ?? [],
     dependencyRecordIds: (row.dependency_record_ids as string[]) ?? [],
@@ -120,6 +130,68 @@ export class PostgresEvidenceStore implements EvidenceStore {
     `;
   }
 
+  async appendSigningKey(registration: SigningKeyRegistration): Promise<void> {
+    await this.sql`
+      insert into openfield.signing_key_registrations (
+        key_id, version, algorithm, public_key_base64, status, valid_from, valid_to,
+        recorded_at, invalidates_signatures_from, reason, supersedes_version
+      ) values (
+        ${registration.keyId}, ${registration.version}, ${registration.algorithm},
+        ${registration.publicKeyBase64}, ${registration.status}, ${registration.validFrom},
+        ${registration.validTo}, ${registration.recordedAt},
+        ${registration.invalidatesSignaturesFrom}, ${registration.reason},
+        ${registration.supersedesVersion}
+      ) on conflict (key_id, version) do nothing
+    `;
+  }
+
+  async appendPrivacyDirective(directive: PrivacyDirective): Promise<void> {
+    await this.sql`
+      insert into openfield.privacy_directives (
+        directive_id, target_type, target_id, action, reason_code, rationale,
+        requested_at, approved_at, approved_by, effective_at, supersedes_directive_id
+      ) values (
+        ${directive.directiveId}, ${directive.targetType}, ${directive.targetId},
+        ${directive.action}, ${directive.reasonCode}, ${directive.rationale},
+        ${directive.requestedAt}, ${directive.approvedAt}, ${directive.approvedBy},
+        ${directive.effectiveAt}, ${directive.supersedesDirectiveId}
+      ) on conflict (directive_id) do nothing
+    `;
+  }
+
+  async appendConnectorExecution(execution: SignedConnectorExecution): Promise<void> {
+    await this.sql`
+      insert into openfield.connector_executions (
+        execution_id, connector_id, source_id, outcome, started_at, finished_at,
+        payload_hash, payload, signature_algorithm, signature_key_id, signature_value_base64
+      ) values (
+        ${execution.payload.executionId}, ${execution.payload.connectorId},
+        ${execution.payload.sourceId}, ${execution.payload.outcome},
+        ${execution.payload.startedAt}, ${execution.payload.finishedAt},
+        ${execution.payloadHash}, ${this.sql.json(execution.payload)},
+        ${execution.signature.algorithm}, ${execution.signature.keyId},
+        ${execution.signature.valueBase64}
+      ) on conflict (execution_id) do nothing
+    `;
+  }
+
+  async getArtifact(artifactHash: string): Promise<EvidenceArtifact | null> {
+    const rows = await this.sql`
+      select artifact_hash, media_type, byte_length, collected_at, storage_uri, content
+      from openfield.artifacts where artifact_hash = ${artifactHash} limit 1
+    `;
+    const row = rows[0];
+    if (!row) return null;
+    return {
+      artifactHash: String(row.artifact_hash) as EvidenceArtifact["artifactHash"],
+      mediaType: String(row.media_type),
+      byteLength: Number(row.byte_length),
+      collectedAt: iso(row.collected_at),
+      storageUri: row.storage_uri ? String(row.storage_uri) : null,
+      contentBase64: row.content ? Buffer.from(row.content as Uint8Array).toString("base64") : undefined
+    };
+  }
+
   async getReceipt(receiptId: string): Promise<SignedReceipt | null> {
     const rows = await this.sql`
       select payload, payload_hash, signature_algorithm, signature_key_id, signature_value_base64
@@ -157,7 +229,7 @@ export class PostgresEvidenceStore implements EvidenceStore {
       license: row.license as SourceRegistration["license"],
       synthetic: Boolean(row.synthetic),
       enabled: Boolean(row.enabled),
-      approvedAt: new Date(String(row.approved_at)).toISOString()
+      approvedAt: iso(row.approved_at)
     }));
   }
 
@@ -172,9 +244,9 @@ export class PostgresEvidenceStore implements EvidenceStore {
     return {
       healthId: String(row.health_id),
       sourceId: String(row.source_id),
-      checkedAt: new Date(String(row.checked_at)).toISOString(),
-      lastAttemptAt: new Date(String(row.last_attempt_at)).toISOString(),
-      lastSuccessAt: row.last_success_at ? new Date(String(row.last_success_at)).toISOString() : null,
+      checkedAt: iso(row.checked_at),
+      lastAttemptAt: iso(row.last_attempt_at),
+      lastSuccessAt: row.last_success_at ? iso(row.last_success_at) : null,
       consecutiveFailures: Number(row.consecutive_failures),
       latencyMs: row.latency_ms === null ? null : Number(row.latency_ms),
       recordsObserved: Number(row.records_observed),
@@ -186,7 +258,6 @@ export class PostgresEvidenceStore implements EvidenceStore {
   async listRecords(query: TemporalQuery = {}): Promise<EvidenceRecord[]> {
     const clauses = ["recorded_at <= $1::timestamptz"];
     const params: string[] = [query.knownAt ?? new Date().toISOString()];
-
     if (query.validAt) {
       params.push(query.validAt);
       clauses.push(`valid_from <= $${params.length}::timestamptz and (valid_to is null or valid_to > $${params.length}::timestamptz)`);
@@ -199,7 +270,6 @@ export class PostgresEvidenceStore implements EvidenceStore {
       params.push(query.kind);
       clauses.push(`kind = $${params.length}`);
     }
-
     const rows = await this.sql.unsafe(`
       select distinct on (record_key)
         *, ST_X(location) as longitude, ST_Y(location) as latitude
@@ -207,7 +277,72 @@ export class PostgresEvidenceStore implements EvidenceStore {
       where ${clauses.join(" and ")}
       order by record_key, recorded_at desc
     `, params);
-
     return rows.map((row) => mapRecord(row as Record<string, unknown>));
+  }
+
+  async listSigningKeyHistory(keyId?: string): Promise<SigningKeyRegistration[]> {
+    const rows = keyId
+      ? await this.sql`select * from openfield.signing_key_registrations where key_id = ${keyId} order by version`
+      : await this.sql`select * from openfield.signing_key_registrations order by key_id, version`;
+    return rows.map((row) => ({
+      keyId: String(row.key_id),
+      version: Number(row.version),
+      algorithm: "Ed25519",
+      publicKeyBase64: String(row.public_key_base64),
+      status: row.status as SigningKeyRegistration["status"],
+      validFrom: iso(row.valid_from),
+      validTo: row.valid_to ? iso(row.valid_to) : null,
+      recordedAt: iso(row.recorded_at),
+      invalidatesSignaturesFrom: row.invalidates_signatures_from ? iso(row.invalidates_signatures_from) : null,
+      reason: row.reason ? String(row.reason) : null,
+      supersedesVersion: row.supersedes_version === null ? null : Number(row.supersedes_version)
+    }));
+  }
+
+  async listPrivacyDirectives(
+    targetType?: PrivacyTargetType,
+    targetId?: string
+  ): Promise<PrivacyDirective[]> {
+    const rows = await this.sql`select * from openfield.privacy_directives order by effective_at, approved_at`;
+    return rows
+      .filter((row) => !targetType || row.target_type === targetType)
+      .filter((row) => !targetId || row.target_id === targetId)
+      .map((row) => ({
+        directiveId: String(row.directive_id),
+        targetType: row.target_type as PrivacyDirective["targetType"],
+        targetId: String(row.target_id),
+        action: row.action as PrivacyDirective["action"],
+        reasonCode: row.reason_code as PrivacyDirective["reasonCode"],
+        rationale: String(row.rationale),
+        requestedAt: iso(row.requested_at),
+        approvedAt: iso(row.approved_at),
+        approvedBy: String(row.approved_by),
+        effectiveAt: iso(row.effective_at),
+        supersedesDirectiveId: row.supersedes_directive_id ? String(row.supersedes_directive_id) : null
+      }));
+  }
+
+  async listConnectorExecutions(
+    query: ConnectorExecutionQuery = {}
+  ): Promise<SignedConnectorExecution[]> {
+    const rows = await this.sql`
+      select payload, payload_hash, signature_algorithm, signature_key_id, signature_value_base64
+      from openfield.connector_executions order by finished_at desc limit ${query.limit ?? 100}
+    `;
+    const knownAt = query.knownAt ? Date.parse(query.knownAt) : Number.POSITIVE_INFINITY;
+    return rows
+      .map((row) => ({
+        payload: row.payload as SignedConnectorExecution["payload"],
+        payloadHash: row.payload_hash as SignedConnectorExecution["payloadHash"],
+        signature: {
+          algorithm: "Ed25519" as const,
+          keyId: String(row.signature_key_id),
+          valueBase64: String(row.signature_value_base64)
+        }
+      }))
+      .filter((entry) => !query.connectorId || entry.payload.connectorId === query.connectorId)
+      .filter((entry) => !query.sourceId || entry.payload.sourceId === query.sourceId)
+      .filter((entry) => !query.outcome || entry.payload.outcome === query.outcome)
+      .filter((entry) => Date.parse(entry.payload.finishedAt) <= knownAt);
   }
 }
