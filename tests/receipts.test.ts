@@ -40,6 +40,7 @@ describe("signed receipts", () => {
       signaturePresent: true,
       signatureValid: true,
       artifactHashValid: true,
+      envelopeValid: true,
       valid: true
     });
   });

@@ -25,7 +25,7 @@ describe("governed connector ingestion", () => {
 
     const receipt = await store.getReceipt("receipt:synthetic:1");
     expect(receipt).not.toBeNull();
-    expect(verifyReceipt(receipt!, publicKey).valid).toBe(true);
+    expect(verifyReceipt(receipt!, publicKey, batch.artifacts[0].bytes).valid).toBe(true);
 
     const health = await store.getLatestSourceHealth(batch.manifest.source.sourceId);
     expect(health?.consecutiveFailures).toBe(0);

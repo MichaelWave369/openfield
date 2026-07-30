@@ -21,7 +21,7 @@ A receipt is valid only when:
 4. the source registration authorizes the mission and collection mode;
 5. synthetic status remains consistent from source through record.
 
-Artifact-byte verification can be deferred when the artifact is stored externally, but the result must remain `null/unknown`, never silently promoted to valid.
+Artifact-byte verification can be deferred when the artifact is stored externally. In that state the signed envelope may be integrity-valid, but the receipt remains not fully verified until the bytes reproduce `artifactHash`.
 
 ## Bitemporal meaning
 

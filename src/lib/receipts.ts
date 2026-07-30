@@ -60,6 +60,7 @@ export type ReceiptVerification = {
   signaturePresent: boolean;
   signatureValid: boolean;
   artifactHashValid: boolean | null;
+  envelopeValid: boolean;
   valid: boolean;
 };
 
@@ -91,11 +92,13 @@ export function verifyReceipt(
   }
 
   const signaturePresent = receipt.signature !== null;
+  const envelopeValid = payloadHashValid && signaturePresent && signatureValid;
   return {
     payloadHashValid,
     signaturePresent,
     signatureValid,
     artifactHashValid,
-    valid: payloadHashValid && signaturePresent && signatureValid && artifactHashValid !== false
+    envelopeValid,
+    valid: envelopeValid && artifactHashValid === true
   };
 }
