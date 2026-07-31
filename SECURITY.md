@@ -1,11 +1,14 @@
 # Security Policy
 
-Do not open a public issue for vulnerabilities that could expose credentials, private data, protected locations, connector secrets, signing keys, administrative contact details, or abuse pathways. Contact the repository owner privately through GitHub.
+Do not open a public issue for vulnerabilities that could expose credentials, private data, protected locations, connector secrets, signing keys, or abuse pathways. Contact the repository owner privately through GitHub.
 
-OpenField prohibits covert collection, access-control evasion, stalking, doxxing, individualized movement profiling, generated allegations represented as verified evidence, and attempts to bypass source access policies.
+OpenField prohibits covert collection, access-control evasion, stalking, doxxing, individualized movement profiling, and generated allegations represented as verified evidence.
 
-Never commit `DATABASE_URL`, connector credentials, private Ed25519 keys, or production operator tokens. Production signing should use a secret manager or hardware-backed service.
+Mission-operation controls:
 
-Key revocation and privacy directives are append-only governance records. Do not bypass them by reading raw database content directly into a public export. Public export paths must resolve current key trust and privacy state.
-
-The SEC connector must retain its declared User-Agent, fair-access pacing, explicit failure health, and no-stale-fallback behavior. Do not increase its request rate beyond the upstream policy.
+- watchlists must contain public organizational or site subjects, not individualized movement targets;
+- SEC document retrieval accepts only validated official archive identifiers, never arbitrary URLs;
+- proposed entity links require analyst review before primary-timeline publication;
+- private signing keys, database URLs, and administrative contact details must not be committed;
+- document-size limits and source rate limits remain enforceable;
+- privacy directives may suppress export without deleting custody history.

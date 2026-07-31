@@ -15,15 +15,16 @@ export function GET() {
   return NextResponse.json({
     ok: true,
     service: "parallax-openfield",
-    version: "0.3.0",
-    status: "operational-trust",
+    version: "0.4.0",
+    status: "mission-operations",
     storage: databaseConfigured ? "postgres-postgis" : "volatile-memory",
     receiptSigning: signingConfigured ? "configured" : "not-configured",
     signingKeyLifecycle: "supported",
     privacyDirectives: "supported",
     connectorExecutionReceipts: "supported",
     lawfulConnectors: {
-      secEdgarSubmissions: secConfigured ? "configured-not-scheduled" : "available-not-configured"
+      secEdgarSubmissions: secConfigured ? "configured-not-scheduled" : "available-not-configured",
+      secEdgarDocuments: secConfigured ? "operator-selection-required" : "available-not-configured"
     },
     liveFeeds: 0,
     truthBoundary: "No connector runs automatically and no filing interpretation is performed.",

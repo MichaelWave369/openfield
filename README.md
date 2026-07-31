@@ -5,23 +5,18 @@
 
 Parallax OpenField is an evidence-governed, map-first workspace for collecting public observations, preserving provenance, separating fact from inference, and reconstructing what was known at any point in time.
 
-## v0.3 operational trust layer
+## v0.4 mission operations
 
-- PostgreSQL/PostGIS evidence spine with a real CI round trip
-- Append-only signing-key registration, retirement, and revocation history
-- Historical key-trust evaluation at the time a receipt was signed
-- Append-only privacy directives that suppress content or export without silently deleting custody
-- Signed connector-execution receipts for success, upstream failure, ingestion rejection, and connector errors
-- Verification Package v2 with artifact-byte checks, key status, and privacy-state reporting
-- First lawful public connector: official SEC EDGAR submission metadata for an operator-configured CIK
-- Exact upstream response bytes preserved before any filing records are derived
-- Explicit SEC fair-access pacing and declared User-Agent requirements
+- Operator-curated company watchlists with normalized SEC CIK identifiers
+- Explicit filing-document selections rather than unrestricted URL fetching
+- Exact official SEC archive bytes preserved before analysis
+- Append-only mission entities and record-to-entity link proposals
+- Mandatory analyst review before proposed links enter primary timelines
+- Timelines that retain observation, claim, inference, forecast, contradiction, and unknown boundaries
+- Mission evidence packets combining watchlists, selections, accepted timelines, unresolved reviews, and Verification Package v2
+- PostgreSQL/PostGIS mission storage and integration coverage
 
-## Truth boundary
-
-OpenField does not turn a filing into a claim about a data center. The SEC connector emits only a direct observation that the SEC published filing metadata. Filing meaning, relevance, and implications remain unknown until separately supported.
-
-The repository contains one live-capable connector, but **no connector runs automatically**. `GET /api/health` reports whether its required configuration is present while keeping `liveFeeds` at zero until an operator executes a governed run.
+The repository remains deliberately honest: the SEC connectors are live-capable but do not run automatically. Operators must configure an identifying User-Agent, create a watch and document selection, register an active signing key, and explicitly execute a governed connector run.
 
 ## Run locally
 
@@ -33,27 +28,13 @@ npm run db:migrate
 npm run dev
 ```
 
-Open `http://localhost:3000`.
+Open `http://localhost:3000`. Run the complete validation suite with `npm run check`.
 
-```bash
-npm run check
-npm run db:down
-```
+## Truth boundary
 
-## SEC EDGAR configuration
+OpenField never silently turns generated prose into evidence. A filing record establishes that filing metadata was published. A filing-document record establishes that bytes were retrieved from an official archive path. Neither establishes data-center relevance, ownership, financing, construction, power availability, or project completion.
 
-```env
-OPENFIELD_SEC_CIK=0001652044
-OPENFIELD_SEC_USER_AGENT=ParallaxOpenField/0.3 admin@example.org
-```
-
-The connector uses `https://data.sec.gov/submissions/CIK##########.json`, sends a declared User-Agent, serializes requests, and enforces an internal maximum of eight requests per second.
-
-## API
-
-- `GET /api/health`
-- `GET /api/v1/events`
-- `GET /api/v1/sources`
+Entity links are proposals until a separate analyst decision accepts them. The record's original claim class remains unchanged after linking.
 
 ## Principles
 
@@ -65,8 +46,7 @@ The connector uses `https://data.sec.gov/submissions/CIK##########.json`, sends 
 6. Privacy and civil liberties are architectural constraints.
 7. Synthetic data never masquerades as live intelligence.
 8. History is appended, not silently rewritten.
-9. A valid signature is not automatically a trusted signature.
-10. Suppression is visible, governed, and reversible through new records.
+9. Automated matching does not confer publication authority.
 
 ## License
 

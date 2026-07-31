@@ -1,63 +1,41 @@
-# OpenField Architecture v0.3
+# OpenField Architecture v0.4
 
 ```text
-Public Source
-    |
-    v
-Governed Connector -------> Source Health
-    |                            |
-    |                            v
-    +--------------------> Signed Execution Receipt
-    |
-    v
-Raw Artifact --SHA-256--> Signed Evidence Receipt
-    |                           |
-    +---------- append-only ----+
-                 |
-                 v
-       Bitemporal Evidence Record
-                 |
-        +--------+---------+
-        |                  |
-        v                  v
- Signing-Key History   Privacy Directives
-        |                  |
-        +--------+---------+
-                 v
-      Verification Package v2
-                 |
-                 v
- Map / Timeline / Graph / Replay
-                 |
-                 v
- Double C Chambers -> Human Authority
+Official Public Source
+        |
+        v
+Governed Connector ---> Signed Execution Receipt ---> Source Health
+        |
+        v
+Raw Artifact ---> Signed Evidence Receipt ---> Bitemporal Record
+                                             |
+                                             v
+Operator Watchlist ---> Proposed Entity Link ---> Analyst Review
+                                                | accepted only
+                                                v
+                                      Evidence-backed Timeline
+                                                |
+                                                v
+                                      Mission Evidence Packet
+                                                |
+                                                v
+                                  Double C Chambers -> Human Authority
 ```
 
-## Trust is multidimensional
+## Runtime layers
 
-OpenField evaluates separate questions:
+1. **Connector boundary** — source authority, license, privacy class, rate limits, failure behavior, and exact configuration hash.
+2. **Artifact layer** — original bytes or immutable storage URI under a SHA-256 address.
+3. **Receipt layer** — signed custody envelope connecting source, collection, transformation, artifact, and license.
+4. **Evidence layer** — observation, claim, inference, forecast, contradiction, or unknown with valid and recorded time.
+5. **Operational trust layer** — signing-key history, privacy directives, connector execution receipts, and verification packages.
+6. **Mission operations layer** — watchlists, entities, proposed links, review decisions, selected documents, timelines, and mission packets.
+7. **Authority layer** — analyst decisions, GovernOtter, GovernOri, Protected Dissenter, and final human authorization.
 
-1. Did the artifact bytes reproduce the recorded hash?
-2. Did canonical receipt bytes reproduce the payload hash?
-3. Did the signature verify cryptographically?
-4. Was that key registered and trusted for signatures at that time?
-5. Is the source authorized for the mission?
-6. Is export currently permitted by privacy directives?
-7. Did the connector run itself leave a signed execution receipt?
+## Entity-link authority
 
-No single green check silently answers all seven.
+A resolver may propose a link but cannot publish it to the primary mission timeline. The timeline service requires a matching review item and an accepted latest decision at the query's knowledge time.
 
-## Operational data families
+## Document custody
 
-- source registrations and health samples;
-- artifacts and signed evidence receipts;
-- bitemporal evidence records;
-- signing-key lifecycle registrations;
-- privacy suppression/restoration directives;
-- signed connector-execution receipts.
-
-All six are append-only. Corrections, revocations, and restorations add new records.
-
-## Connector failure semantics
-
-A failed upstream request creates no observations and replays no stale records. The attempt is represented by source health and a signed execution receipt. Ingestion rejection is distinct from an upstream failure so policy errors cannot masquerade as source outages.
+SEC filing documents are retrieved only from operator-created selections. The exact response bytes are stored before any future text extraction. Extraction, classification, and relevance assessment must each become explicit transformations or review decisions rather than invisible preprocessing.
