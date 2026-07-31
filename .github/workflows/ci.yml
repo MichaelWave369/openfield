@@ -39,11 +39,14 @@ jobs:
         run: |
           psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f infra/postgres/init/001_evidence_spine.sql
           psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f infra/postgres/init/002_operational_trust.sql
+          psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f infra/postgres/init/003_mission_operations.sql
           psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -c "select PostGIS_Version();"
           psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -c "select count(*) from openfield.records;"
           psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -c "select count(*) from openfield.signing_key_registrations;"
           psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -c "select count(*) from openfield.privacy_directives;"
           psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -c "select count(*) from openfield.connector_executions;"
+          psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -c "select count(*) from openfield.mission_watchlist;"
+          psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -c "select count(*) from openfield.review_items;"
       - run: npm install --no-audit --no-fund
       - run: npm run typecheck
       - run: npm run lint

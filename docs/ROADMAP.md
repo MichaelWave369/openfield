@@ -2,34 +2,37 @@
 
 ## M0 — Foundation — merged
 
-Operator console, synthetic mission, claim classes, receipt inspection, confidence vector, API, tests, CI, governance, and security baseline.
+Operator console, synthetic mission, record classes, receipt inspection, confidence vector, API, tests, CI, governance, and security baseline.
 
-## M1 — Durable evidence spine — merged
+## M1 — Durable evidence spine — merged as v0.2
 
-PostgreSQL/PostGIS, append-only artifacts and receipts, source registry, source health, connector admission, bitemporal evidence, and verification packages.
+PostgreSQL/PostGIS, append-only artifacts, canonical signed envelopes, source registry, health telemetry, connector admission checks, and bitemporal queries.
 
-## M1.5 — Operational trust — v0.3 candidate
+## M2 — Operational trust — merged as v0.3
 
-- PostgreSQL adapter insert/query round trip in CI
-- signing-key registration, retirement, and revocation
-- privacy suppression/restoration directives
-- signed connector-execution receipts
-- Verification Package v2
-- first lawful public connector: SEC EDGAR filing metadata
+Signing-key lifecycle, time-scoped revocation, privacy directives, signed connector executions, Verification Package v2, real Postgres integration, and official SEC submissions metadata.
 
-## M2 — Data Center Watch pilot
+## M3 — Mission operations — v0.4 candidate
 
-Add operator-curated company watchlists, filing-document retrieval under source terms, permit and utility sources, entity resolution, site timelines, and evidence packet export. Filing interpretation must remain a separate claim-producing step with citations and dissent.
+Operator-curated company watchlists, selected SEC document custody, append-only mission entities, analyst-gated record links, evidence-backed timelines, unresolved-review visibility, and mission packet export.
 
-## M3 — Corroboration and replay
+Remaining M3 gates after this candidate:
+
+- authenticated operator write APIs and role-scoped authority;
+- lifecycle events for pausing and retiring watch entries without mutation;
+- document text extraction as a separately receipted transformation;
+- jurisdiction-specific permit and utility connectors admitted one source at a time;
+- UI views for watchlists, review queue, timelines, and mission packets.
+
+## M4 — Corroboration and replay
 
 Independent-source clustering, contradiction graph, historical world replay, knowledge replay, forecast scoring, and calibration.
 
-## M4 — Double C chambers
+## M5 — Double C chambers
 
 Collector, Entity Resolver, Timeline, Corroborator, Protected Dissenter, GovernOtter, GovernOri, and private model gateway.
 
-## M5 — Federation
+## M6 — Federation
 
 Node identity, signed exchange, scoped sharing, revocation, selective disclosure, and public verification portal.
 
