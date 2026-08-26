@@ -1,4 +1,6 @@
 import type { EvidenceRecord, SignedReceipt } from "@/domain/evidence";
+import { canonicalJson } from "@/lib/canonical-json";
+import { sha256 } from "@/lib/receipts";
 
 export type ParallaxReceipt = {
   schema: "parallax.receipt.v1";
@@ -41,6 +43,33 @@ export type ParallaxEvidenceRecord = {
   synthetic: boolean;
   location: EvidenceRecord["location"];
   native: EvidenceRecord;
+};
+
+export type ParallaxReviewBundle = {
+  schema: "parallax.review_bundle.v1";
+  bundleId: string;
+  producer: "OpenField";
+  createdAt: string;
+  authority: "NONE";
+  evidenceRefs: string[];
+  receiptRefs: string[];
+  subjectRefs: string[];
+  recordKinds: EvidenceRecord["kind"][];
+  synthetic: boolean;
+  integrity: {
+    artifactHash: string;
+    receiptPayloadHash: string;
+    nativePayloadHash: string;
+  };
+  verification: {
+    nativeCryptographicVerificationRequired: true;
+    cryptographicValidity: "not-evaluated-by-projection";
+    evidenceTruth: "not-established";
+  };
+  native: {
+    evidenceRecord: EvidenceRecord;
+    signedReceipt: SignedReceipt;
+  };
 };
 
 export function toParallaxEvidenceReceipt(signed: SignedReceipt): ParallaxReceipt {
@@ -90,7 +119,9 @@ export function toParallaxEvidenceReceipt(signed: SignedReceipt): ParallaxReceip
   };
 }
 
-export function toParallaxEvidenceRecord(record: EvidenceRecord): ParallaxEvidenceRecord {
+export function toParallaxEvidenceRecord(
+  record: EvidenceRecord
+): ParallaxEvidenceRecord {
   return {
     schema: "parallax.evidence.v1",
     recordId: record.recordId,
@@ -108,5 +139,43 @@ export function toParallaxEvidenceRecord(record: EvidenceRecord): ParallaxEviden
     synthetic: record.synthetic,
     location: record.location,
     native: record
+  };
+}
+
+export function toParallaxReviewBundle(
+  record: EvidenceRecord,
+  signed: SignedReceipt
+): ParallaxReviewBundle {
+  if (!record.receiptIds.includes(signed.payload.receiptId)) {
+    throw new Error("EvidenceRecord does not reference the supplied receipt");
+  }
+
+  const native = {
+    evidenceRecord: record,
+    signedReceipt: signed
+  };
+
+  return {
+    schema: "parallax.review_bundle.v1",
+    bundleId: `openfield:${record.recordId}:${signed.payload.receiptId}`,
+    producer: "OpenField",
+    createdAt: record.recordedAt,
+    authority: "NONE",
+    evidenceRefs: [record.recordId],
+    receiptRefs: [signed.payload.receiptId],
+    subjectRefs: [record.missionId, record.recordKey],
+    recordKinds: [record.kind],
+    synthetic: record.synthetic || signed.payload.synthetic,
+    integrity: {
+      artifactHash: signed.payload.artifactHash,
+      receiptPayloadHash: signed.payloadHash,
+      nativePayloadHash: sha256(canonicalJson(native))
+    },
+    verification: {
+      nativeCryptographicVerificationRequired: true,
+      cryptographicValidity: "not-evaluated-by-projection",
+      evidenceTruth: "not-established"
+    },
+    native
   };
 }
