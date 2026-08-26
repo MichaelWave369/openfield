@@ -1,0 +1,94 @@
+{
+  "schema": "parallax.review_bundle.v1",
+  "bundleId": "openfield:record-pass11-001:receipt:pass11:001",
+  "producer": "OpenField",
+  "createdAt": "2026-08-25T23:50:01Z",
+  "authority": "NONE",
+  "evidenceRefs": [
+    "record-pass11-001"
+  ],
+  "receiptRefs": [
+    "receipt:pass11:001"
+  ],
+  "subjectRefs": [
+    "pass11-generalization",
+    "pass11:evidence:001"
+  ],
+  "recordKinds": [
+    "observation"
+  ],
+  "synthetic": true,
+  "integrity": {
+    "artifactHash": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "receiptPayloadHash": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+    "nativePayloadHash": "sha256:29d50a641bb0048f351fd4c6c808387f553b4d426abefbc772b0422f60f7d24c"
+  },
+  "verification": {
+    "nativeCryptographicVerificationRequired": true,
+    "cryptographicValidity": "not-evaluated-by-projection",
+    "evidenceTruth": "not-established"
+  },
+  "native": {
+    "evidenceRecord": {
+      "recordId": "record-pass11-001",
+      "recordKey": "pass11:evidence:001",
+      "missionId": "pass11-generalization",
+      "kind": "observation",
+      "title": "Synthetic governance fixture",
+      "summary": "Synthetic evidence for cross-domain generalization only.",
+      "location": null,
+      "validFrom": "2026-08-25T23:50:00Z",
+      "validTo": null,
+      "recordedAt": "2026-08-25T23:50:01Z",
+      "supersedesRecordId": null,
+      "receiptIds": [
+        "receipt:pass11:001"
+      ],
+      "dependencyRecordIds": [],
+      "confidence": {
+        "sourceReliability": 1,
+        "directness": 1,
+        "corroboration": 0,
+        "independence": 1,
+        "freshness": 1,
+        "contradictionPenalty": 0,
+        "uncertainty": 0
+      },
+      "synthetic": true
+    },
+    "signedReceipt": {
+      "payload": {
+        "receiptVersion": "openfield.receipt.v1",
+        "receiptId": "receipt:pass11:001",
+        "artifactHash": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "sourceId": "fixture.pass11",
+        "sourceRecordId": "source-record-001",
+        "collectedAt": "2026-08-25T23:50:00Z",
+        "observedAt": "2026-08-25T23:49:59Z",
+        "validFrom": "2026-08-25T23:49:59Z",
+        "validTo": null,
+        "recordedAt": "2026-08-25T23:50:01Z",
+        "mediaType": "application/json",
+        "byteLength": 3,
+        "transformations": [],
+        "license": {
+          "name": "Synthetic",
+          "attributionRequired": false,
+          "redistributionAllowed": true
+        },
+        "synthetic": true,
+        "collector": {
+          "connectorId": "fixture",
+          "connectorVersion": "1",
+          "nodeId": "local"
+        }
+      },
+      "payloadHash": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "signature": {
+        "algorithm": "Ed25519",
+        "keyId": "fixture-key",
+        "valueBase64": "ZmFrZS1zaWduYXR1cmU="
+      }
+    }
+  }
+}
